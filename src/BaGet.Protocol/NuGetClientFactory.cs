@@ -90,6 +90,17 @@ namespace BaGet.Protocol
         }
 
         /// <summary>
+        /// Create a client to interact with the NuGet Autocomplete resource.
+        /// 
+        /// See https://docs.microsoft.com/en-us/nuget/api/search-autocomplete-service-resource
+        /// </summary>
+        /// <returns>A client to interact with the NuGet Autocomplete resource.</returns>
+        public virtual IAutocompleteClient CreateAutocompleteClient()
+        {
+            return new AutocompleteClient(this);
+        }
+
+        /// <summary>
         /// Create a client to interact with the NuGet catalog resource.
         /// 
         /// See https://docs.microsoft.com/en-us/nuget/api/catalog-resource
@@ -121,6 +132,11 @@ namespace BaGet.Protocol
             return GetAsync(c => c.SearchClient, cancellationToken);
         }
 
+        private Task<IAutocompleteClient> GetAutocompleteClientAsync(CancellationToken cancellationToken = default)
+        {
+            return GetAsync(c => c.AutocompleteClient, cancellationToken);
+        }
+
         private Task<ICatalogClient> GetCatalogClientAsync(CancellationToken cancellationToken = default)
         {
             return GetAsync(c => c.CatalogClient, cancellationToken);
@@ -140,12 +156,19 @@ namespace BaGet.Protocol
 
                         var serviceIndex = await serviceIndexClient.GetAsync(cancellationToken);
 
-                        var contentClient = new RawPackageContentClient(_httpClient, serviceIndex.GetPackageContentResourceUrl());
-                        var metadataClient = new RawPackageMetadataClient(_httpClient, serviceIndex.GetPackageMetadataResourceUrl());
-                        var catalogClient = new RawCatalogClient(_httpClient, serviceIndex.GetCatalogResourceUrl());
-                        var searchClient = new RawSearchClient(_httpClient,
-                            serviceIndex.GetSearchQueryResourceUrl(),
-                            serviceIndex.GetSearchAutocompleteResourceUrl());
+                        var contentResourceUrl = serviceIndex.GetPackageContentResourceUrl();
+                        var metadataResourceUrl = serviceIndex.GetPackageMetadataResourceUrl();
+                        var catalogResourceUrl = serviceIndex.GetCatalogResourceUrl();
+                        var searchResourceUrl = serviceIndex.GetSearchQueryResourceUrl();
+                        var autocompleteResourceUrl = serviceIndex.GetSearchAutocompleteResourceUrl();
+
+                        var contentClient = new RawPackageContentClient(_httpClient, contentResourceUrl);
+                        var metadataClient = new RawPackageMetadataClient(_httpClient, metadataResourceUrl);
+                        var searchClient = new RawSearchClient(_httpClient, searchResourceUrl);
+                        var autocompleteClient = new RawAutocompleteClient(_httpClient, autocompleteResourceUrl);
+                        var catalogClient = catalogResourceUrl == null
+                            ? new NullCatalogClient() as ICatalogClient
+                            : new RawCatalogClient(_httpClient, catalogResourceUrl);
 
                         _clients = new NuGetClients
                         {
@@ -154,6 +177,7 @@ namespace BaGet.Protocol
                             PackageContentClient = contentClient,
                             PackageMetadataClient = metadataClient,
                             SearchClient = searchClient,
+                            AutocompleteClient = autocompleteClient,
                             CatalogClient = catalogClient,
                         };
                     }
@@ -175,6 +199,7 @@ namespace BaGet.Protocol
             public IPackageContentClient PackageContentClient { get; set; }
             public IPackageMetadataClient PackageMetadataClient { get; set; }
             public ISearchClient SearchClient { get; set; }
+            public IAutocompleteClient AutocompleteClient { get; set; }
             public ICatalogClient CatalogClient { get; set; }
         }
     }
