@@ -1,0 +1,3 @@
+[submodule "src/BaGet.SFCustom"]
+	path = src/BaGet.SFCustom
+	url = git@github.com:solitaryfigment/BaGet.SFCustom.git
