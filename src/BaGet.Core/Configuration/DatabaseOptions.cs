@@ -16,7 +16,7 @@ namespace BaGet.Core
         Sqlite,
         SqlServer,
         PostgreSql,
-
+        Custom,
         AzureTable,
     }
 }

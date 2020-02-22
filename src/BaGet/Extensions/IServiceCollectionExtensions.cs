@@ -20,6 +20,8 @@ using BaGet.Gcp.Configuration;
 using BaGet.Gcp.Extensions;
 using BaGet.Gcp.Services;
 using BaGet.Protocol;
+using Baget.SFCustom.Database;
+using Baget.SFCustom.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +55,7 @@ namespace BaGet.Extensions
                 services.ConfigureHttpServices();
             }
 
+            services.ConfigureCustom(configuration);
             services.AddBaGetContext();
 
             services.AddTransient<IUrlGenerator, BaGetUrlGenerator>();
@@ -67,6 +70,7 @@ namespace BaGet.Extensions
                     case DatabaseType.SqlServer:
                     case DatabaseType.MySql:
                     case DatabaseType.PostgreSql:
+                    case DatabaseType.Custom:
                         return new PackageService(provider.GetRequiredService<IContext>());
 
                     case DatabaseType.AzureTable:
@@ -117,6 +121,9 @@ namespace BaGet.Extensions
                     case DatabaseType.PostgreSql:
                         return provider.GetRequiredService<PostgreSqlContext>();
 
+                    case DatabaseType.Custom:
+                        return provider.GetRequiredService<CustomContext>();
+
                     case DatabaseType.AzureTable:
                     default:
                         throw new InvalidOperationException(
@@ -127,7 +134,6 @@ namespace BaGet.Extensions
             services.AddDbContext<SqliteContext>((provider, options) =>
             {
                 var databaseOptions = provider.GetRequiredService<IOptionsSnapshot<DatabaseOptions>>();
-
                 options.UseSqlite(databaseOptions.Value.ConnectionString);
             });
 
@@ -255,6 +261,7 @@ namespace BaGet.Extensions
                             case DatabaseType.PostgreSql:
                             case DatabaseType.Sqlite:
                             case DatabaseType.SqlServer:
+                            case DatabaseType.Custom:
                                 return provider.GetRequiredService<DatabaseSearchService>();
 
                             case DatabaseType.AzureTable:

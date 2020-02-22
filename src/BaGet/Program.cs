@@ -44,7 +44,6 @@ namespace BaGet
             {
                 var host = CreateWebHostBuilder(args).Build();
 
-                await host.RunMigrationsAsync(cancellationToken);
                 await host.RunAsync(cancellationToken);
             });
 
