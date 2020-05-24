@@ -47,11 +47,6 @@ namespace BaGet
             services.ConfigureAliyunOSS(configuration);
             services.ConfigureIis(configuration);
 
-            if (httpServices)
-            {
-                services.ConfigureHttpServices();
-            }
-
             services.ConfigureCustom(configuration);
             services.AddBaGetContext();
 
